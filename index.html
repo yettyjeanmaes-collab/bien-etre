@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Tulipe Sport">
 <meta name="theme-color" content="#E23D5B">
-<title>Tulipe — Espace Monsieur</title>
+<title>Tulipe Sport</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -75,7 +75,7 @@ header.top{position:sticky;top:0;z-index:5;background:linear-gradient(120deg,var
 </head>
 <body>
 <header class="top"><div class="top-in">
-  <div class="logo"><div class="badge">🏃</div><div><h1>Tulipe Sport</h1><small id="sousTitre">Espace Monsieur</small></div></div>
+  <div class="logo"><div class="badge">🏃</div><div><h1>Tulipe Sport</h1><small id="sousTitre">Espace du foyer</small></div></div>
   <button class="iconbtn" id="btnSortir" hidden>Se déconnecter</button>
 </div></header>
 <main class="wrap" id="app"><div class="empty" style="margin-top:40px">Chargement…</div></main>
@@ -88,7 +88,12 @@ header.top{position:sticky;top:0;z-index:5;background:linear-gradient(120deg,var
 // ===================================================================
 const SUPABASE_URL = "https://tjdvycbzynsioeoffkii.supabase.co";
 const SUPABASE_CLE_PUBLIQUE = "sb_publishable_3DCh7ayO0oNUJ2EPu4BDLQ_5jGTCftl";
-const DEMO = new URLSearchParams(location.search).has("demo");
+const PARAMS = new URLSearchParams(location.search);
+const DEMO = PARAMS.has("demo");                 // ?demo, ?demo=madame, ?demo=mdp : aperçus sans connexion
+const DEMO_VUE = PARAMS.get("demo") || "monsieur";
+const TULIPE_URL = "https://claude.ai/artifact/N8KmS6n3WwKELXzxekrXWS"; // l'app Tulipe de Madame (inchangée)
+// lien reçu par e-mail (invitation ou mot de passe oublié) : à lire AVANT que Supabase n'efface l'adresse
+let LIEN_MDP = (/type=(invite|recovery)/.exec(location.hash) || [])[1] || null;
 
 const $ = (s) => document.querySelector(s);
 const app = $("#app");
@@ -114,14 +119,17 @@ let sb = null, moi = null;
 async function charger() {
   if (DEMO) return donneesDemo();
   const debut = moins(29);
-  const [p, s, j, w] = await Promise.all([
+  const [p, s, j, w, f, fs] = await Promise.all([
     sb.from("profils").select("*").eq("id", moi.id).maybeSingle(),
     sb.from("garmin_seances").select("activity_id,jour,debut,type,nom,duree_s,distance_m,calories,fc_moy").eq("user_id", moi.id).gte("jour", debut).order("debut", { ascending: false }),
     sb.from("garmin_jours").select("jour,pas,kcal_total,kcal_actives,fc_repos,stress_moy,bb_max,bb_min,sommeil_s,score_sommeil,vfc,poids_kg,maj_le").eq("user_id", moi.id).gte("jour", debut).order("jour"),
     sb.from("poids_saisis").select("jour,kg").eq("user_id", moi.id).order("jour"),
+    sb.from("profils").select("id,prenom,role").neq("id", moi.id),
+    sb.from("garmin_seances").select("jour,type,nom,duree_s,distance_m,calories").neq("user_id", moi.id).gte("jour", moins(6)).order("debut", { ascending: false }),
   ]);
   for (const r of [p, s, j]) if (r.error) throw r.error;
-  return { profil: p.data ?? {}, seances: s.data ?? [], jours: j.data ?? [], poids: w.error ? [] : (w.data ?? []) };
+  return { profil: p.data ?? {}, seances: s.data ?? [], jours: j.data ?? [], poids: w.error ? [] : (w.data ?? []),
+    foyer: f.data ?? [], seancesFoyer: fs.data ?? [] };
 }
 
 // ---------------- calculs ----------------
@@ -169,6 +177,8 @@ function calculs(d) {
 
 // ---------------- affichage ----------------
 function rendre(d) {
+  if (d.profil.role === "madame") return rendreMadame(d);
+  $("#sousTitre").textContent = "Espace Monsieur";
   const c = calculs(d);
   const date = new Date().toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" });
   const prenom = d.profil.prenom ?? "Jean";
@@ -228,11 +238,20 @@ function rendre(d) {
     ${semaineResume(d)}
   </section>
 
-  <section class="card">
+  ${poidsHTML(c)}
+
+  <div class="sync">${d.jours.length ? "Dernière synchro Garmin : " + new Date(Math.max(...d.jours.map((x) => +new Date(x.maj_le ?? 0)))).toLocaleString("fr-BE", { dateStyle: "short", timeStyle: "short" }) : ""}</div>`;
+
+  brancherPoids();
+}
+
+// ---------------- poids (commun aux deux espaces) ----------------
+function poidsHTML(c) {
+  return `<section class="card">
     <div class="secttl"><span class="em">⚖️</span><h3>Mon poids</h3><span class="pill leaf" style="margin-left:auto">objectif ${fmt(c.objectif, 1)} kg</span></div>
     <div class="grid3" style="margin-bottom:12px">
       <div class="stat"><div class="v">${fmt(c.poids, 1)}</div><div class="l">actuel (kg)</div></div>
-      <div class="stat"><div class="v">${fmt(Math.max(c.poids - c.objectif, 0), 1)}</div><div class="l">reste (kg)</div></div>
+      <div class="stat"><div class="v">${c.poids == null ? "–" : fmt(Math.max(c.poids - c.objectif, 0), 1)}</div><div class="l">reste (kg)</div></div>
       <div class="stat"><div class="v">${c.poidsListe.length}</div><div class="l">pesées</div></div>
     </div>
     ${c.poidsListe.length >= 2 ? `<div class="chart">${poidsSVG(c.poidsListe, c.objectif)}</div>` : ""}
@@ -241,10 +260,10 @@ function rendre(d) {
       <button class="btn" id="btnPoids">Enregistrer</button>
     </div>
     <div class="err" id="errPoids"></div>
-  </section>
+  </section>`;
+}
 
-  <div class="sync">${d.jours.length ? "Dernière synchro Garmin : " + new Date(Math.max(...d.jours.map((x) => +new Date(x.maj_le ?? 0)))).toLocaleString("fr-BE", { dateStyle: "short", timeStyle: "short" }) : ""}</div>`;
-
+function brancherPoids() {
   $("#btnPoids").onclick = async () => {
     const kg = parseFloat(String($("#kg").value).replace(",", "."));
     if (!(kg >= 30 && kg <= 250)) { $("#errPoids").textContent = "Entre un poids valide."; return; }
@@ -252,6 +271,67 @@ function rendre(d) {
     const { error } = await sb.from("poids_saisis").upsert({ jour: moins(0), kg });
     if (error) { $("#errPoids").textContent = "Impossible d'enregistrer : " + error.message; return; }
     rendre(await charger());
+  };
+}
+
+// ---------------- espace Madame ----------------
+function rendreMadame(d) {
+  const pr = d.profil;
+  const poidsListe = d.poids.map((x) => ({ jour: x.jour, kg: +x.kg })).sort((a, b) => a.jour.localeCompare(b.jour));
+  const c = { poids: poidsListe.at(-1)?.kg ?? null, objectif: +(pr.objectif_kg ?? 60), poidsListe };
+  const date = new Date().toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" });
+  const conjoint = d.foyer.find((x) => x.role === "monsieur");
+  const sem = d.seancesFoyer;
+  const min = sem.reduce((a, s) => a + (s.duree_s ?? 0) / 60, 0), km = sem.reduce((a, s) => a + (s.distance_m ?? 0) / 1000, 0);
+  $("#sousTitre").textContent = "Espace Madame";
+  app.innerHTML = `
+  ${DEMO ? '<div class="demo">Aperçu avec des données d\'exemple — rien n\'est enregistré</div>' : ""}
+  <section class="card hero">
+    <div class="day">${esc(date)}</div>
+    <h2>Bonjour ${esc(pr.prenom ?? "Yetty")} 🌷</h2>
+    <div class="cheer">Tes repas, ton protocole et ta liste de courses sont dans ton app Tulipe.</div>
+    <a class="btn" href="${TULIPE_URL}" style="display:block;text-align:center;text-decoration:none;margin-top:12px;position:relative;z-index:1">Ouvrir mon app Tulipe</a>
+  </section>
+  ${poidsHTML(c)}
+  ${conjoint ? `<section class="card">
+    <div class="secttl"><span class="em">🏃</span><h3>Le sport de ${esc(conjoint.prenom)} cette semaine</h3></div>
+    ${sem.length ? `<div class="grid3">
+      <div class="stat"><div class="v">${sem.length}</div><div class="l">séances</div></div>
+      <div class="stat"><div class="v">${fmt(min / 60, 1)} h</div><div class="l">de sport</div></div>
+      <div class="stat"><div class="v">${fmt(km)}</div><div class="l">km</div></div></div>
+      <div class="small muted" style="margin-top:8px">Ses jours de grosse séance, prévois des féculents dans son assiette.</div>`
+      : `<div class="empty">Pas de séance ces 7 derniers jours.</div>`}
+  </section>` : ""}`;
+  brancherPoids();
+}
+
+// ---------------- choisir son mot de passe (invitation ou oubli) ----------------
+function ecranMotDePasse() {
+  $("#btnSortir").hidden = true;
+  $("#sousTitre").textContent = "Espace du foyer";
+  const invitation = LIEN_MDP === "invite" || DEMO_VUE === "mdp";
+  app.innerHTML = `<section class="card login">
+    <div class="secttl"><span class="em">🔑</span><h3>${invitation ? "Bienvenue ! Choisis ton mot de passe" : "Nouveau mot de passe"}</h3></div>
+    <form class="fld" id="frmMdp">
+      <input id="mdp1" type="password" autocomplete="new-password" placeholder="Mot de passe (10 caractères minimum)" minlength="10" required>
+      <input id="mdp2" type="password" autocomplete="new-password" placeholder="Retape-le pour confirmer" minlength="10" required>
+      <button class="btn" type="submit">Enregistrer mon mot de passe</button>
+    </form>
+    <div class="err" id="errMdp"></div>
+    <div class="tiny muted">Conseil : laisse ton iPhone proposer un mot de passe fort et l'enregistrer pour toi.</div>
+  </section>`;
+  $("#frmMdp").onsubmit = async (e) => {
+    e.preventDefault();
+    const a = $("#mdp1").value, b = $("#mdp2").value;
+    if (a.length < 10) { $("#errMdp").textContent = "10 caractères minimum."; return; }
+    if (a !== b) { $("#errMdp").textContent = "Les deux mots de passe ne sont pas identiques."; return; }
+    if (DEMO) { $("#errMdp").textContent = "Aperçu : rien n'est enregistré."; return; }
+    const { error } = await sb.auth.updateUser({ password: a });
+    if (error) { $("#errMdp").textContent = "Impossible d'enregistrer : " + error.message; return; }
+    LIEN_MDP = null;
+    history.replaceState(null, "", location.pathname);
+    rendre(await charger());
+    $("#btnSortir").hidden = false;
   };
 }
 
@@ -306,6 +386,7 @@ function poidsSVG(l, obj) {
 // ---------------- connexion ----------------
 function ecranConnexion(msg = "") {
   $("#btnSortir").hidden = true;
+  $("#sousTitre").textContent = "Espace du foyer";
   app.innerHTML = `<section class="card login">
     <div class="secttl"><span class="em">🔐</span><h3>Connexion</h3></div>
     <form class="fld" id="frm">
@@ -314,8 +395,16 @@ function ecranConnexion(msg = "") {
       <button class="btn" type="submit">Se connecter</button>
     </form>
     <div class="err" id="err">${esc(msg)}</div>
-    <div class="tiny muted">Accès réservé au foyer. Tes données ne sont visibles que par vous deux.</div>
+    <button class="btn ghost" id="btnOubli" type="button" style="width:100%;margin:4px 0 10px">Mot de passe oublié ?</button>
+    <div class="tiny muted">Accès réservé au foyer. Vos données ne sont visibles que par vous deux.</div>
   </section>`;
+  $("#btnOubli").onclick = async () => {
+    const email = $("#email").value.trim();
+    if (!email) { $("#err").textContent = "Tape d'abord ton adresse e-mail ci-dessus."; return; }
+    if (DEMO) { $("#err").textContent = "Aperçu : aucun e-mail envoyé."; return; }
+    await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+    $("#err").textContent = "Si cette adresse a un compte, un e-mail vient de partir : ouvre-le sur cet appareil.";
+  };
   $("#frm").onsubmit = async (e) => {
     e.preventDefault();
     $("#err").textContent = "";
@@ -325,17 +414,22 @@ function ecranConnexion(msg = "") {
 }
 
 async function demarrer() {
-  if (DEMO) { rendre(await charger()); return; }
+  if (DEMO) {
+    if (DEMO_VUE === "mdp") return ecranMotDePasse();
+    if (DEMO_VUE === "connexion") return ecranConnexion();
+    rendre(await charger()); return;
+  }
   const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
   sb = createClient(SUPABASE_URL, SUPABASE_CLE_PUBLIQUE, { auth: { persistSession: true, autoRefreshToken: true } });
   $("#btnSortir").onclick = () => sb.auth.signOut();
   const montrer = async (session) => {
     if (!session) return ecranConnexion();
     moi = session.user;
+    if (LIEN_MDP) return ecranMotDePasse();
     $("#btnSortir").hidden = false;
     try { rendre(await charger()); } catch (e) { app.innerHTML = `<div class="card empty">Erreur de chargement : ${esc(e.message)}</div>`; }
   };
-  sb.auth.onAuthStateChange((_ev, session) => { if (_ev !== "TOKEN_REFRESHED") montrer(session); });
+  sb.auth.onAuthStateChange((_ev, session) => { if (_ev !== "TOKEN_REFRESHED" && _ev !== "USER_UPDATED") setTimeout(() => montrer(session), 0); });
   const { data } = await sb.auth.getSession();
   if (!data.session) ecranConnexion();
 }
@@ -351,8 +445,11 @@ function donneesDemo() {
       nom: i === 0 ? "Course tranquille" : i % 6 === 0 ? "Sortie vélo" : "Footing tapis", duree_s: (i % 6 === 0 && i ? 75 : 45) * 60,
       distance_m: i === 0 ? 8800 : i % 6 === 0 ? 32000 : 8800, calories: i % 6 === 0 && i ? 820 : 520, fc_moy: i % 6 === 0 && i ? 128 : 142 });
   }
-  return { profil: { prenom: "Jean", naissance_annee: 1982, taille_cm: 172, objectif_kg: 61 }, seances: seances.reverse(), jours,
-    poids: [{ jour: moins(14), kg: 66.4 }, { jour: moins(7), kg: 66.0 }, { jour: moins(0), kg: 65.7 }] };
+  if (DEMO_VUE === "madame") return { profil: { prenom: "Yetty", role: "madame", objectif_kg: 60 }, seances: [], jours: [],
+    poids: [{ jour: moins(14), kg: 75.0 }, { jour: moins(7), kg: 74.2 }, { jour: moins(0), kg: 73.6 }],
+    foyer: [{ prenom: "Jean", role: "monsieur" }], seancesFoyer: seances.filter((s) => s.jour >= moins(6)) };
+  return { profil: { prenom: "Jean", role: "monsieur", naissance_annee: 1982, taille_cm: 172, objectif_kg: 61 }, seances: seances.reverse(), jours,
+    poids: [{ jour: moins(14), kg: 66.4 }, { jour: moins(7), kg: 66.0 }, { jour: moins(0), kg: 65.7 }], foyer: [], seancesFoyer: [] };
 }
 
 demarrer();
