@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tulipe Sport">
+<meta name="theme-color" content="#E23D5B">
+<title>Tulipe — Espace Monsieur</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF6F1; --card:#FFFFFF; --ink:#2A1F24; --muted:#857579; --line:#F3E3DD;
+  --tulip:#E23D5B; --tulip2:#FF7A59; --tulip-soft:#FFE4E8; --leaf:#22A06B; --leaf-soft:#DDF5E9;
+  --gold:#F5A524; --gold-soft:#FFF1D6; --blue:#2F8FD8; --blue-soft:#E1F0FC; --violet:#8E5BD8; --violet-soft:#EFE6FB;
+  --r:20px; --shadow:0 6px 18px rgba(226,61,91,.08), 0 1px 3px rgba(42,31,36,.06);
+  --hero1:#2A1F24; --hero2:#4A2A36; --glow1:#FFE0D6; --glow2:#FFE8EE;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,sans-serif;font-size:15px;line-height:1.45}
+body{background:radial-gradient(1200px 500px at 100% -10%,var(--glow1) 0,transparent 60%),radial-gradient(900px 400px at -10% 30%,var(--glow2) 0,transparent 55%),var(--bg);background-attachment:fixed;min-height:100vh}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:700;margin:0}
+button,input{font:inherit}
+.wrap{max-width:720px;margin:0 auto;padding:0 14px 40px}
+header.top{position:sticky;top:0;z-index:5;background:linear-gradient(120deg,var(--tulip) 0%,var(--tulip2) 100%);color:#fff;box-shadow:0 4px 16px rgba(226,61,91,.25);padding-top:env(safe-area-inset-top)}
+.top-in{max-width:720px;margin:0 auto;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.logo{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
+.logo .badge{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.22);display:grid;place-items:center;font-size:20px}
+.logo h1{font-size:20px;color:#fff;white-space:nowrap}
+.logo small{display:block;color:rgba(255,255,255,.85);font-size:12px;font-family:"Plus Jakarta Sans";font-weight:500}
+.iconbtn{border:0;background:rgba(255,255,255,.2);color:#fff;border-radius:999px;padding:7px 12px;font-weight:700;font-size:13px;cursor:pointer}
+.card{background:var(--card);border-radius:var(--r);padding:16px;margin:14px 0;box-shadow:var(--shadow)}
+.muted{color:var(--muted)} .small{font-size:13px} .tiny{font-size:12px}
+.secttl{display:flex;align-items:center;gap:8px;font-size:18px;margin-bottom:10px}
+.secttl .em{font-size:22px}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--tulip-soft);color:var(--tulip)}
+.pill.leaf{background:var(--leaf-soft);color:var(--leaf)} .pill.gold{background:var(--gold-soft);color:#B56E00} .pill.blue{background:var(--blue-soft);color:var(--blue)}
+.hero{background:linear-gradient(145deg,var(--hero1) 0%,var(--hero2) 100%);color:#fff;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-60px;top:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,var(--tulip2),transparent 70%);opacity:.5}
+.hero .day{font-size:13px;color:rgba(255,255,255,.75);font-weight:600}
+.hero h2{font-size:26px;color:#fff}
+.rings{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;position:relative;z-index:1}
+.ring{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);border-radius:16px;padding:10px}
+.ring .v{font-family:Fraunces,serif;font-size:26px;font-weight:700;line-height:1}
+.ring .l{font-size:11.5px;color:rgba(255,255,255,.75);font-weight:600}
+.ring .t{font-size:11px;color:rgba(255,255,255,.6)}
+.ring .ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px;background:rgba(255,255,255,.12);flex:none}
+.cheer{margin-top:12px;background:rgba(255,255,255,.12);border-radius:14px;padding:9px 12px;font-size:13.5px;font-weight:600;position:relative;z-index:1}
+.sess{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.sess:last-child{border-bottom:0}
+.sess .ico{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:22px;flex:none}
+.sess b{font-size:14.5px} .sess .r{margin-left:auto;text-align:right;font-weight:800;color:var(--tulip);white-space:nowrap}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:#FFFAF7;border-radius:14px;padding:10px;text-align:center}
+.stat .v{font-family:Fraunces,serif;font-size:22px;font-weight:700}
+.stat .l{font-size:11.5px;color:var(--muted);font-weight:700}
+.reco{border-radius:16px;padding:12px 14px;font-weight:600;font-size:14px;margin-top:10px}
+.reco.vert{background:var(--leaf-soft);color:#13704A} .reco.orange{background:var(--gold-soft);color:#8A5300} .reco.rouge{background:var(--tulip-soft);color:#A3203A}
+.tip{background:linear-gradient(135deg,#FFF1D6,#FFE4E8)}
+.tip li{margin:4px 0}
+.chart svg{width:100%;height:auto;display:block}
+.fld{display:flex;gap:8px;align-items:center}
+.fld input{flex:1;border:1.5px solid var(--line);border-radius:12px;padding:10px 11px;background:#FFFCFA;font-size:16px;font-weight:600;color:var(--ink);min-width:0}
+.btn{border:0;background:linear-gradient(135deg,var(--tulip),var(--tulip2));color:#fff;border-radius:14px;padding:11px 16px;font-weight:700;box-shadow:0 4px 12px rgba(226,61,91,.3);cursor:pointer}
+.btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line);box-shadow:none}
+.login{max-width:380px;margin:60px auto 0}
+.login .fld{flex-direction:column;align-items:stretch;gap:10px}
+.err{color:var(--tulip);font-weight:700;font-size:13px;min-height:18px}
+.demo{background:var(--violet-soft);color:var(--violet);font-weight:700;font-size:12.5px;text-align:center;padding:6px;border-radius:12px;margin-top:12px}
+.empty{color:var(--muted);text-align:center;padding:12px 0;font-size:14px}
+.sync{font-size:12px;color:var(--muted);text-align:center;margin:14px 0}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <div class="logo"><div class="badge">🏃</div><div><h1>Tulipe Sport</h1><small id="sousTitre">Espace Monsieur</small></div></div>
+  <button class="iconbtn" id="btnSortir" hidden>Se déconnecter</button>
+</div></header>
+<main class="wrap" id="app"><div class="empty" style="margin-top:40px">Chargement…</div></main>
+
+<script type="module">
+// ===================================================================
+// Espace Monsieur — lecture des données Garmin rangées dans Supabase.
+// La clé ci-dessous est la clé « publique » de Supabase : elle ne donne
+// accès à rien sans connexion (règles de sécurité « foyer » dans la base).
+// ===================================================================
+const SUPABASE_URL = "https://tjdvycbzynsioeoffkii.supabase.co";
+const SUPABASE_CLE_PUBLIQUE = "sb_publishable_3DCh7ayO0oNUJ2EPu4BDLQ_5jGTCftl";
+const DEMO = new URLSearchParams(location.search).has("demo");
+
+const $ = (s) => document.querySelector(s);
+const app = $("#app");
+const fmt = (n, d = 0) => n == null || isNaN(n) ? "–" : Number(n).toLocaleString("fr-BE", { maximumFractionDigits: d, minimumFractionDigits: d });
+const jourLocal = (d = new Date()) => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(d);
+const moins = (n) => jourLocal(new Date(Date.now() - n * 864e5));
+const JOURS = ["dim", "lun", "mar", "mer", "jeu", "ven", "sam"];
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const TYPES = {
+  running: ["🏃", "Course", "var(--tulip-soft)"], treadmill_running: ["🏃", "Tapis", "var(--tulip-soft)"],
+  trail_running: ["⛰️", "Trail", "var(--tulip-soft)"], track_running: ["🏟️", "Piste", "var(--tulip-soft)"],
+  cycling: ["🚴", "Vélo", "var(--blue-soft)"], road_biking: ["🚴", "Vélo route", "var(--blue-soft)"],
+  virtual_ride: ["🚴", "Vélo virtuel", "var(--blue-soft)"], indoor_cycling: ["🚴", "Vélo intérieur", "var(--blue-soft)"],
+  mountain_biking: ["🚵", "VTT", "var(--blue-soft)"], indoor_rowing: ["🚣", "Rameur", "var(--violet-soft)"],
+  walking: ["🚶", "Marche", "var(--leaf-soft)"], strength_training: ["🏋️", "Renfo", "var(--gold-soft)"],
+};
+const typeDe = (t) => TYPES[t] ?? ["💪", (t ?? "Séance").replace(/_/g, " "), "var(--gold-soft)"];
+
+// ---------------- données ----------------
+let sb = null, moi = null;
+
+async function charger() {
+  if (DEMO) return donneesDemo();
+  const debut = moins(29);
+  const [p, s, j, w] = await Promise.all([
+    sb.from("profils").select("*").eq("id", moi.id).maybeSingle(),
+    sb.from("garmin_seances").select("activity_id,jour,debut,type,nom,duree_s,distance_m,calories,fc_moy").eq("user_id", moi.id).gte("jour", debut).order("debut", { ascending: false }),
+    sb.from("garmin_jours").select("jour,pas,kcal_total,kcal_actives,fc_repos,stress_moy,bb_max,bb_min,sommeil_s,score_sommeil,vfc,poids_kg,maj_le").eq("user_id", moi.id).gte("jour", debut).order("jour"),
+    sb.from("poids_saisis").select("jour,kg").eq("user_id", moi.id).order("jour"),
+  ]);
+  for (const r of [p, s, j]) if (r.error) throw r.error;
+  return { profil: p.data ?? {}, seances: s.data ?? [], jours: j.data ?? [], poids: w.error ? [] : (w.data ?? []) };
+}
+
+// ---------------- calculs ----------------
+function calculs(d) {
+  const auj = moins(0), hier = moins(1);
+  const pr = d.profil;
+  const age = pr.naissance_annee ? new Date().getFullYear() - pr.naissance_annee : 44;
+  const taille = pr.taille_cm ?? 172;
+  const poidsListe = [...d.poids.map((x) => ({ jour: x.jour, kg: +x.kg })),
+    ...d.jours.filter((x) => x.poids_kg).map((x) => ({ jour: x.jour, kg: +x.poids_kg }))].sort((a, b) => a.jour.localeCompare(b.jour));
+  const poids = poidsListe.at(-1)?.kg ?? 66;
+  const objectif = +(pr.objectif_kg ?? 61);
+  const bmr = 10 * poids + 6.25 * taille - 5 * age + 5; // Mifflin-St Jeor (homme)
+
+  // dépense « hors sport » réelle, d'après Garmin (jours complets récents)
+  const kcalSportParJour = {};
+  for (const s of d.seances) kcalSportParJour[s.jour] = (kcalSportParJour[s.jour] ?? 0) + (s.calories ?? 0);
+  const bases = d.jours.filter((x) => x.jour < auj && x.kcal_total).map((x) => x.kcal_total - (kcalSportParJour[x.jour] ?? 0)).slice(-14);
+  const base = bases.length >= 5 ? bases.reduce((a, b) => a + b, 0) / bases.length : bmr * 1.4;
+
+  const seancesAuj = d.seances.filter((s) => s.jour === auj);
+  const kcalSport = seancesAuj.reduce((a, s) => a + (s.calories ?? 0), 0);
+  const minSport = seancesAuj.reduce((a, s) => a + (s.duree_s ?? 0) / 60, 0);
+  const deficit = minSport >= 60 ? 250 : minSport > 0 ? 300 : 400; // déficit plus doux les jours d'effort
+  const cible = Math.max(Math.round((base + kcalSport - deficit) / 10) * 10, Math.round(bmr * 1.2 / 10) * 10);
+  const prot = [Math.round(poids * 1.8 / 5) * 5, Math.round(poids * 2.0 / 5) * 5];
+
+  // récupération
+  const jAuj = d.jours.find((x) => x.jour === auj) ?? {};
+  const jHier = d.jours.find((x) => x.jour === hier) ?? {};
+  const nuit = jAuj.sommeil_s ? jAuj : jHier;
+  const moy = (k, n) => { const v = d.jours.filter((x) => x.jour < auj && x[k] != null).slice(-n).map((x) => +x[k]); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+  const fcMoy = moy("fc_repos", 14), vfcMoy = moy("vfc", 7);
+  const fc = jAuj.fc_repos ?? jHier.fc_repos, vfc = jAuj.vfc ?? jHier.vfc, bb = jAuj.bb_max ?? jHier.bb_max;
+  const sig = [];
+  let niveau = "vert";
+  const pire = (n) => { if (n === "rouge" || (n === "orange" && niveau === "vert")) niveau = n; };
+  if (nuit.score_sommeil != null) { if (nuit.score_sommeil < 55) { pire("rouge"); sig.push("nuit difficile"); } else if (nuit.score_sommeil < 70) { pire("orange"); sig.push("sommeil moyen"); } }
+  if (bb != null) { if (bb < 40) { pire("rouge"); sig.push("Body Battery basse"); } else if (bb < 65) { pire("orange"); sig.push("Body Battery moyenne"); } }
+  if (fc != null && fcMoy) { if (fc >= fcMoy + 6) { pire("rouge"); sig.push("FC au repos élevée"); } else if (fc >= fcMoy + 3) { pire("orange"); sig.push("FC au repos un peu haute"); } }
+  if (vfc != null && vfcMoy) { if (vfc < vfcMoy * 0.85) { pire("rouge"); sig.push("VFC en baisse"); } else if (vfc < vfcMoy * 0.93) { pire("orange"); sig.push("VFC un peu basse"); } }
+
+  return { auj, age, poids, objectif, poidsListe, bmr, base, cible, prot, seancesAuj, kcalSport, minSport, deficit, nuit, fc, fcMoy, vfc, vfcMoy, bb, niveau, sig, jAuj };
+}
+
+// ---------------- affichage ----------------
+function rendre(d) {
+  const c = calculs(d);
+  const date = new Date().toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" });
+  const prenom = d.profil.prenom ?? "Jean";
+  const jourSport = c.minSport > 0;
+  const recoTxt = {
+    vert: "✅ Bien récupéré : feu vert pour une séance de qualité.",
+    orange: "🟠 Récupération moyenne : privilégie une séance facile ou courte.",
+    rouge: "🔴 Corps fatigué : repos, marche ou séance très douce aujourd'hui.",
+  }[c.niveau];
+
+  const glucides = c.minSport >= 90
+    ? "Grosse séance : féculents aux 2 repas (riz, pâtes complètes, patates douces) + une collation glucidique après l'effort."
+    : jourSport ? "Jour de sport : une portion de féculents au repas qui suit la séance."
+    : "Jour de repos : féculents modérés, misez sur légumes + protéines.";
+
+  app.innerHTML = `
+  ${DEMO ? '<div class="demo">Aperçu avec des données d\'exemple — rien n\'est enregistré</div>' : ""}
+  <section class="card hero">
+    <div class="day">${esc(date)}</div>
+    <h2>Bonjour ${esc(prenom)} 👋</h2>
+    <div class="rings">
+      <div class="ring"><div class="ic">🔥</div><div><div class="v">${fmt(c.cible)}</div><div class="l">kcal à manger</div><div class="t">${jourSport ? "séance comprise" : "jour sans séance"}</div></div></div>
+      <div class="ring"><div class="ic">🥩</div><div><div class="v">${c.prot[0]}–${c.prot[1]}</div><div class="l">g de protéines</div><div class="t">≈ 2 g par kilo</div></div></div>
+    </div>
+    <div class="cheer">${recoTxt}</div>
+  </section>
+
+  <section class="card">
+    <div class="secttl"><span class="em">🏅</span><h3>Séances du jour</h3></div>
+    ${c.seancesAuj.length ? c.seancesAuj.map(seanceHTML).join("") : `<div class="empty">Pas encore de séance aujourd'hui — elle apparaîtra ici dans l'heure après la synchro de ta montre.</div>`}
+  </section>
+
+  <section class="card">
+    <div class="secttl"><span class="em">🔋</span><h3>Récupération</h3></div>
+    <div class="grid3">
+      <div class="stat"><div class="v">${c.nuit.sommeil_s ? fmt(c.nuit.sommeil_s / 3600, 1) + " h" : "–"}</div><div class="l">sommeil${c.nuit.score_sommeil ? " · " + c.nuit.score_sommeil : ""}</div></div>
+      <div class="stat"><div class="v">${fmt(c.bb)}</div><div class="l">Body Battery</div></div>
+      <div class="stat"><div class="v">${fmt(c.fc)}</div><div class="l">FC repos${c.fcMoy ? " (moy. " + fmt(c.fcMoy) + ")" : ""}</div></div>
+    </div>
+    <div class="reco ${c.niveau}">${c.sig.length ? "À surveiller : " + c.sig.join(", ") + "." : "Tous les signaux sont au vert."}${c.vfc ? ` VFC ${fmt(c.vfc)} ms${c.vfcMoy ? " (moy. 7 j : " + fmt(c.vfcMoy) + ")" : ""}.` : ""}</div>
+  </section>
+
+  <section class="card tip">
+    <div class="secttl"><span class="em">🍽️</span><h3>Côté assiette aujourd'hui</h3></div>
+    <ul class="small" style="margin:0;padding-left:18px">
+      <li>${glucides}</li>
+      <li>Protéines réparties sur le déjeuner et le souper (≈ ${Math.round(c.prot[0] / 2)} g chacun)${jourSport ? ", + shake ou skyr/fromage blanc après l'effort si besoin" : ""}.</li>
+      ${c.niveau !== "vert" ? "<li>Récup' : hydratation +0,5 L, aliments riches en magnésium (amandes, chocolat noir 85 %, légumes verts).</li>" : ""}
+      ${c.minSport >= 45 ? `<li>Hydratation : ≈ ${fmt(c.minSport / 60 * 0.6, 1)} L en plus pour compenser la séance.</li>` : ""}
+    </ul>
+    <div class="tiny muted" style="margin-top:8px">Calcul : dépense habituelle ${fmt(c.base)} kcal (Garmin) + séance ${fmt(c.kcalSport)} kcal − ${c.deficit} kcal de déficit doux pour perdre sans perdre en forme.</div>
+  </section>
+
+  <section class="card">
+    <div class="secttl"><span class="em">📅</span><h3>Ma semaine</h3></div>
+    <div class="chart">${semaineSVG(d)}</div>
+    ${semaineResume(d)}
+  </section>
+
+  <section class="card">
+    <div class="secttl"><span class="em">⚖️</span><h3>Mon poids</h3><span class="pill leaf" style="margin-left:auto">objectif ${fmt(c.objectif, 1)} kg</span></div>
+    <div class="grid3" style="margin-bottom:12px">
+      <div class="stat"><div class="v">${fmt(c.poids, 1)}</div><div class="l">actuel (kg)</div></div>
+      <div class="stat"><div class="v">${fmt(Math.max(c.poids - c.objectif, 0), 1)}</div><div class="l">reste (kg)</div></div>
+      <div class="stat"><div class="v">${c.poidsListe.length}</div><div class="l">pesées</div></div>
+    </div>
+    ${c.poidsListe.length >= 2 ? `<div class="chart">${poidsSVG(c.poidsListe, c.objectif)}</div>` : ""}
+    <div class="fld" style="margin-top:10px">
+      <input id="kg" type="number" inputmode="decimal" step="0.1" min="30" max="250" placeholder="Poids de ce matin (kg)">
+      <button class="btn" id="btnPoids">Enregistrer</button>
+    </div>
+    <div class="err" id="errPoids"></div>
+  </section>
+
+  <div class="sync">${d.jours.length ? "Dernière synchro Garmin : " + new Date(Math.max(...d.jours.map((x) => +new Date(x.maj_le ?? 0)))).toLocaleString("fr-BE", { dateStyle: "short", timeStyle: "short" }) : ""}</div>`;
+
+  $("#btnPoids").onclick = async () => {
+    const kg = parseFloat(String($("#kg").value).replace(",", "."));
+    if (!(kg >= 30 && kg <= 250)) { $("#errPoids").textContent = "Entre un poids valide."; return; }
+    if (DEMO) { $("#errPoids").textContent = "Aperçu : rien n'est enregistré."; return; }
+    const { error } = await sb.from("poids_saisis").upsert({ jour: moins(0), kg });
+    if (error) { $("#errPoids").textContent = "Impossible d'enregistrer : " + error.message; return; }
+    rendre(await charger());
+  };
+}
+
+function seanceHTML(s) {
+  const [ic, lib, bg] = typeDe(s.type);
+  const min = Math.round((s.duree_s ?? 0) / 60);
+  const km = s.distance_m ? fmt(s.distance_m / 1000, 1) + " km · " : "";
+  return `<div class="sess"><div class="ico" style="background:${bg}">${ic}</div>
+    <div><b>${esc(s.nom ?? lib)}</b><div class="small muted">${lib} · ${km}${min} min${s.fc_moy ? " · FC " + fmt(s.fc_moy) : ""}</div></div>
+    <div class="r">${fmt(s.calories)} kcal</div></div>`;
+}
+
+function semaineSVG(d) {
+  const W = 340, H = 150, jours = [...Array(7)].map((_, i) => moins(6 - i));
+  const min = jours.map((j) => d.seances.filter((s) => s.jour === j).reduce((a, s) => a + (s.duree_s ?? 0) / 60, 0));
+  const max = Math.max(60, ...min);
+  const bw = 30, gap = (W - 7 * bw) / 8;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Minutes de sport sur 7 jours">
+    ${jours.map((j, i) => {
+      const h = min[i] / max * (H - 42), x = gap + i * (bw + gap), y = H - 22 - h;
+      const dj = new Date(j + "T12:00:00");
+      return `<rect x="${x}" y="${H - 22 - Math.max(h, 3)}" width="${bw}" height="${Math.max(h, 3)}" rx="8" fill="${min[i] ? "url(#g)" : "#F3E3DD"}"/>
+        ${min[i] ? `<text x="${x + bw / 2}" y="${y - 5}" text-anchor="middle" font-size="11" font-weight="700" fill="#2A1F24">${Math.round(min[i])}′</text>` : ""}
+        <text x="${x + bw / 2}" y="${H - 6}" text-anchor="middle" font-size="11" font-weight="600" fill="${j === moins(0) ? "#E23D5B" : "#857579"}">${JOURS[dj.getDay()]}</text>`;
+    }).join("")}
+    <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF7A59"/><stop offset="1" stop-color="#E23D5B"/></linearGradient></defs>
+  </svg>`;
+}
+
+function semaineResume(d) {
+  const sem = d.seances.filter((s) => s.jour >= moins(6));
+  if (!sem.length) return `<div class="empty">Aucune séance ces 7 derniers jours.</div>`;
+  const min = sem.reduce((a, s) => a + (s.duree_s ?? 0) / 60, 0), km = sem.reduce((a, s) => a + (s.distance_m ?? 0) / 1000, 0), kc = sem.reduce((a, s) => a + (s.calories ?? 0), 0);
+  return `<div class="grid3" style="margin-top:8px">
+    <div class="stat"><div class="v">${sem.length}</div><div class="l">séances</div></div>
+    <div class="stat"><div class="v">${fmt(min / 60, 1)} h</div><div class="l">${fmt(km)} km</div></div>
+    <div class="stat"><div class="v">${fmt(kc)}</div><div class="l">kcal sport</div></div></div>`;
+}
+
+function poidsSVG(l, obj) {
+  const W = 340, H = 120, pts = l.slice(-30), vals = [...pts.map((p) => p.kg), obj];
+  const mn = Math.min(...vals) - 0.5, mx = Math.max(...vals) + 0.5;
+  const X = (i) => 14 + i * (W - 28) / Math.max(pts.length - 1, 1), Y = (v) => 10 + (mx - v) / (mx - mn) * (H - 30);
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Évolution du poids">
+    <line x1="10" x2="${W - 10}" y1="${Y(obj)}" y2="${Y(obj)}" stroke="#22A06B" stroke-dasharray="5 5" stroke-width="1.5"/>
+    <text x="${W - 12}" y="${Y(obj) - 5}" text-anchor="end" font-size="10.5" font-weight="700" fill="#22A06B">objectif</text>
+    <polyline fill="none" stroke="#E23D5B" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="${pts.map((p, i) => X(i) + "," + Y(p.kg)).join(" ")}"/>
+    ${pts.map((p, i) => `<circle cx="${X(i)}" cy="${Y(p.kg)}" r="3.5" fill="#fff" stroke="#E23D5B" stroke-width="2"/>`).join("")}
+  </svg>`;
+}
+
+// ---------------- connexion ----------------
+function ecranConnexion(msg = "") {
+  $("#btnSortir").hidden = true;
+  app.innerHTML = `<section class="card login">
+    <div class="secttl"><span class="em">🔐</span><h3>Connexion</h3></div>
+    <form class="fld" id="frm">
+      <input id="email" type="email" autocomplete="username" placeholder="Adresse e-mail" required>
+      <input id="mdp" type="password" autocomplete="current-password" placeholder="Mot de passe" required>
+      <button class="btn" type="submit">Se connecter</button>
+    </form>
+    <div class="err" id="err">${esc(msg)}</div>
+    <div class="tiny muted">Accès réservé au foyer. Tes données ne sont visibles que par vous deux.</div>
+  </section>`;
+  $("#frm").onsubmit = async (e) => {
+    e.preventDefault();
+    $("#err").textContent = "";
+    const { error } = await sb.auth.signInWithPassword({ email: $("#email").value.trim(), password: $("#mdp").value });
+    if (error) $("#err").textContent = "Connexion refusée : vérifie l'e-mail et le mot de passe.";
+  };
+}
+
+async function demarrer() {
+  if (DEMO) { rendre(await charger()); return; }
+  const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+  sb = createClient(SUPABASE_URL, SUPABASE_CLE_PUBLIQUE, { auth: { persistSession: true, autoRefreshToken: true } });
+  $("#btnSortir").onclick = () => sb.auth.signOut();
+  const montrer = async (session) => {
+    if (!session) return ecranConnexion();
+    moi = session.user;
+    $("#btnSortir").hidden = false;
+    try { rendre(await charger()); } catch (e) { app.innerHTML = `<div class="card empty">Erreur de chargement : ${esc(e.message)}</div>`; }
+  };
+  sb.auth.onAuthStateChange((_ev, session) => { if (_ev !== "TOKEN_REFRESHED") montrer(session); });
+  const { data } = await sb.auth.getSession();
+  if (!data.session) ecranConnexion();
+}
+
+// ---------------- données d'exemple (aperçu) ----------------
+function donneesDemo() {
+  const jours = [], seances = [];
+  for (let i = 29; i >= 0; i--) {
+    const j = moins(i), r = (k) => Math.abs(Math.sin(i * 7.3 + k));
+    jours.push({ jour: j, pas: Math.round(6000 + r(1) * 9000), kcal_total: Math.round(2000 + r(2) * 500), fc_repos: Math.round(46 + r(3) * 4),
+      bb_max: Math.round(65 + r(4) * 35), sommeil_s: Math.round((6.8 + r(5) * 1.8) * 3600), score_sommeil: Math.round(68 + r(6) * 22), vfc: Math.round(55 + r(7) * 12), maj_le: new Date().toISOString() });
+    if (i % 2 === 0 || i === 0) seances.push({ jour: j, debut: j + "T07:30:00Z", type: i === 0 ? "running" : i % 6 === 0 ? "cycling" : "treadmill_running",
+      nom: i === 0 ? "Course tranquille" : i % 6 === 0 ? "Sortie vélo" : "Footing tapis", duree_s: (i % 6 === 0 && i ? 75 : 45) * 60,
+      distance_m: i === 0 ? 8800 : i % 6 === 0 ? 32000 : 8800, calories: i % 6 === 0 && i ? 820 : 520, fc_moy: i % 6 === 0 && i ? 128 : 142 });
+  }
+  return { profil: { prenom: "Jean", naissance_annee: 1982, taille_cm: 172, objectif_kg: 61 }, seances: seances.reverse(), jours,
+    poids: [{ jour: moins(14), kg: 66.4 }, { jour: moins(7), kg: 66.0 }, { jour: moins(0), kg: 65.7 }] };
+}
+
+demarrer();
+</script>
+</body>
+</html>
