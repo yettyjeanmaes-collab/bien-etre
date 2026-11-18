@@ -94,6 +94,9 @@ const DEMO_VUE = PARAMS.get("demo") || "monsieur";
 const TULIPE_URL = "https://claude.ai/artifact/N8KmS6n3WwKELXzxekrXWS"; // l'app Tulipe de Madame (inchangée)
 // lien reçu par e-mail (invitation ou mot de passe oublié) : à lire AVANT que Supabase n'efface l'adresse
 let LIEN_MDP = (/type=(invite|recovery)/.exec(location.hash) || [])[1] || null;
+// jetons du lien e-mail, gardés en mémoire (secours si la session n'a pas été enregistrée par le navigateur)
+const H = new URLSearchParams(location.hash.slice(1));
+const JETONS = H.get("access_token") && H.get("refresh_token") ? { access_token: H.get("access_token"), refresh_token: H.get("refresh_token") } : null;
 
 const $ = (s) => document.querySelector(s);
 const app = $("#app");
@@ -318,16 +321,30 @@ function ecranMotDePasse() {
       <button class="btn" type="submit">Enregistrer mon mot de passe</button>
     </form>
     <div class="err" id="errMdp"></div>
+    <button class="btn ghost" id="btnRetour" type="button" style="width:100%;margin:4px 0 10px">Retour à la connexion</button>
     <div class="tiny muted">Conseil : laisse ton iPhone proposer un mot de passe fort et l'enregistrer pour toi.</div>
   </section>`;
+  $("#btnRetour").onclick = async () => { LIEN_MDP = null; history.replaceState(null, "", location.pathname); if (sb) await sb.auth.signOut().catch(() => {}); ecranConnexion(); };
   $("#frmMdp").onsubmit = async (e) => {
     e.preventDefault();
     const a = $("#mdp1").value, b = $("#mdp2").value;
     if (a.length < 10) { $("#errMdp").textContent = "10 caractères minimum."; return; }
     if (a !== b) { $("#errMdp").textContent = "Les deux mots de passe ne sont pas identiques."; return; }
     if (DEMO) { $("#errMdp").textContent = "Aperçu : rien n'est enregistré."; return; }
-    const { error } = await sb.auth.updateUser({ password: a });
-    if (error) { $("#errMdp").textContent = "Impossible d'enregistrer : " + error.message; return; }
+    $("#errMdp").textContent = "Enregistrement…";
+    let { error } = await sb.auth.updateUser({ password: a });
+    if (error && JETONS) {                       // session perdue : on la restaure depuis le lien reçu
+      await sb.auth.setSession(JETONS);
+      ({ error } = await sb.auth.updateUser({ password: a }));
+    }
+    if (error && JETONS) {                       // dernier recours : appel direct au serveur d'authentification
+      const r = await fetch(SUPABASE_URL + "/auth/v1/user", { method: "PUT",
+        headers: { "Content-Type": "application/json", apikey: SUPABASE_CLE_PUBLIQUE, Authorization: "Bearer " + JETONS.access_token },
+        body: JSON.stringify({ password: a }) });
+      error = r.ok ? null : { message: "le lien a expiré ou a déjà servi" };
+      if (!error) await sb.auth.setSession(JETONS).catch(() => {});
+    }
+    if (error) { $("#errMdp").textContent = "Impossible d'enregistrer (" + error.message + "). Retourne à la connexion et touche « Mot de passe oublié ? » pour recevoir un nouveau lien."; return; }
     LIEN_MDP = null;
     history.replaceState(null, "", location.pathname);
     rendre(await charger());
