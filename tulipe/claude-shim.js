@@ -86,30 +86,66 @@
   };
 
   // ---------- dictée (reconnaissance vocale du téléphone, gratuite)
+  // Chrome Android renvoie des morceaux qui se répètent : on fusionne les redites
+  // et on travaille phrase par phrase (relance automatique jusqu'à ⏹️).
+  function merge(a,b){
+    a=(a||"").trim(); b=(b||"").trim(); if(!a) return b; if(!b) return a;
+    const A=a.toLowerCase(), B=b.toLowerCase();
+    if(B.startsWith(A)) return b; if(A.startsWith(B)||A.endsWith(B)) return a;
+    for(let n=Math.min(A.length,B.length);n>3;n--){ if(A.endsWith(B.slice(0,n))) return a+b.slice(n); }
+    return a+" "+b;
+  }
   function dictation(){
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if(!SR) throw new Error("indisponible");
-    const h = {final:[],partial:[],state:[]}; let r = null;
+    const h = {final:[],partial:[],state:[]}; let r=null, on=false, txt="", tries=0;
     const emit = (k,v)=>h[k].forEach(f=>{ try{f(v)}catch(e){} });
+    function flush(){ if(txt){ emit("final",{text:" "+txt}); txt=""; } emit("partial",{text:""}); }
+    function go(){
+      r = new SR(); r.lang = "fr-BE"; r.continuous = false; r.interimResults = true;
+      r.onresult = ev=>{ tries=0; let t=""; for(let i=0;i<ev.results.length;i++) t=merge(t, ev.results[i][0].transcript); txt=t; emit("partial",{text:txt}); };
+      r.onerror = ev=>{ if(ev.error==="not-allowed"||ev.error==="service-not-allowed"){ on=false; emit("state",{state:"idle",reason:"denied"}); } };
+      r.onend = ()=>{ flush(); if(on && ++tries<8){ try{ go(); return; }catch(e){} } on=false; emit("state",{state:"idle"}); };
+      r.start();
+    }
     return {
       onFinal(f){h.final.push(f)}, onPartial(f){h.partial.push(f)}, onState(f){h.state.push(f)},
-      start(o){
-        r = new SR(); r.lang = "fr-BE"; r.continuous = true; r.interimResults = true;
-        r.onstart = ()=>emit("state",{state:"listening"});
-        r.onresult = ev=>{ let part=""; for(let i=ev.resultIndex;i<ev.results.length;i++){ const t=ev.results[i][0].transcript; if(ev.results[i].isFinal) emit("final",{text:" "+t.trim()}); else part+=t; } emit("partial",{text:part}); };
-        r.onerror = ev=>emit("state",{state:"idle",reason:ev.error==="not-allowed"?"denied":"error"});
-        r.onend = ()=>emit("state",{state:"idle"});
-        r.start();
-      },
-      stop(){ if(r) r.stop(); }
+      start(o){ on=true; tries=0; txt=""; emit("state",{state:"listening"}); go(); },
+      stop(){ on=false; if(r) try{ r.stop(); }catch(e){} }
     };
   }
+
+  // ---------- « Envoyer à Claude » sans forfait : lecture simple de la phrase
+  const MEALS=[["pd",/petit[- ]?d[ée]j|ce matin/],["gouter",/go[uû]ter|4 ?heures/],["collation",/collation|en[- ]cas/],
+    ["diner",/souper|ce soir/],["dej",/d[ée]jeuner|[àa] midi|ce midi/]];
+  const DRINKS=[["eau",/\beaux?\b|verres? d'eau/],["the",/\bth[ée]s?(?![a-z])|tisane|infusion/],["redbull",/red ?bull/],["cafe",/caf[ée]s?(?![a-z])/],["vin",/\bvins?\b|verres? de (rouge|blanc|ros[ée])/]];
+  const NUM={un:1,une:1,deux:2,trois:3,quatre:4,cinq:5,six:6};
+  function localSample(){ return { async json(prompt){
+    const m=/La personne vient de dire[^"]*"""([\s\S]*?)"""/.exec(prompt||"");
+    if(!m){ const e=new Error("non disponible"); e.code="unavailable"; throw e; }
+    const t=m[1].toLowerCase().replace(/’/g,"'"), actions=[], vus=[];
+    const hm=/(\d{1,2}) ?(?:h|heures?|:) ?(\d{2})?/.exec(t);
+    const heure=hm?String(Math.min(23,+hm[1])).padStart(2,"0")+":"+(hm[2]||"00"):undefined;
+    const diff=/\bsans\b|au lieu|[àa] la place|remplac|en plus|aussi mang/.test(t);
+    const u=t.replace(/petit[- ]?d[ée]j\w*/g," PDJ ");
+    MEALS.forEach(([k,re])=>{ if(k==="pd" ? /PDJ|ce matin/.test(u) : re.test(u)) vus.push(k); });
+    if(/d[îi]ner/.test(u)) vus.push((hm && +hm[1]<15) || /midi/.test(u) ? "dej" : "diner");
+    const repas=[...new Set(vus)];
+    if(!diff) repas.forEach(r=>actions.push({type:"repas",repas:r,heure}));
+    DRINKS.forEach(([k,re])=>{ const x=new RegExp("(\\d+|un|une|deux|trois|quatre|cinq|six)?\\s*(?:verres?|tasses?|canettes?|bouteilles?)?\\s*(?:de |d')?(?:"+re.source+")").exec(t); if(x) actions.push({type:"boisson",boisson:k,nombre:NUM[x[1]]||parseInt(x[1])||1,heure}); });
+    const noms={pd:"petit-déjeuner",dej:"déjeuner",gouter:"goûter",diner:"souper",collation:"collation"};
+    const fait=actions.map(a=>a.type==="repas"?noms[a.repas]+" coché":(a.nombre>1?a.nombre+" ":"")+({eau:"eau",the:"thé",redbull:"Red Bull",cafe:"café",vin:"vin"})[a.boisson]).join(", ");
+    return { actions,
+      resume: fait ? "Noté : "+fait+"." : "Votre note est enregistrée.",
+      conseils: diff ? "Comme le repas était différent du menu, cochez-le à la main ou ajoutez un écart avec ses calories." : (fait?"":"Je n'ai pas reconnu de repas ni de boisson : vous pouvez cocher à la main.") };
+  }}; }
 
   window.claude = { async use(name){
     if(name==="db"){ if(!(await session())) throw new Error("hors ligne"); return DBshim; }
     if(name==="user"){ const s=await session(); if(!s) throw new Error("hors ligne"); return { id: async()=>s.user.id }; }
     if(name==="dictation") return dictation();
-    throw new Error("non disponible"); // "sample" : assistant IA désactivé
+    if(name==="sample") return localSample(); // pas d'IA : lecture simple, sans forfait
+    throw new Error("non disponible");
   }};
 
   if("serviceWorker" in navigator) addEventListener("load", ()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
