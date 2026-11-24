@@ -716,25 +716,43 @@ function bilanCard(date,who){
   const b=S.bilans[date+"-"+who];
   let h=`<div class="card bilan"><div class="row between"><div class="secttl" style="color:#fff"><span class="em">🌙</span>Bilan du soir</div><span class="pill" style="background:rgba(255,255,255,.18);color:#fff">rappel à 20h24</span></div>`;
   if(b) h+=`<div style="margin-top:10px;font-weight:600">${esc(b.resume||"")}</div><div class="bajust"><b>Pour demain ·</b> ${esc(b.ajustement||"")}</div>`;
-  else h+=`<div class="small" style="margin-top:8px;opacity:.85">Chaque soir, Claude résume votre journée et propose un ajustement pour demain. Vous recevez une notification à 20h24, ou faites-le quand vous voulez.</div>`;
+  else h+=`<div class="small" style="margin-top:8px;opacity:.85">Touchez le bouton le soir (ou quand vous voulez) : l'app résume votre journée (protéines, calories, eau, repas) et propose un ajustement pour demain.</div>`;
   if(S.bilanBusy) h+=`<div class="small" style="margin-top:10px">Claude prépare votre bilan<span class="dots"><i>.</i><i>.</i><i>.</i></span></div>`;
   h+=`<button class="btn" style="margin-top:12px;width:100%;background:#fff;color:#4A2A36" data-act="bilan">${b?"🔄 Refaire mon bilan":"✨ Faire mon bilan maintenant"}</button></div>`;
   return h;
 }
+function bilanLocal(di,who,date){
+  const P=S.reglages[who], j=J(date,who), coef=coefFor(who), bien=j.bien||{};
+  const meals=mealsOf(di,who,date); let k=0,p=0,nm=0; const manques=[];
+  meals.forEach(m=>{ if((j.manges||{})[m.key]){ const n=mN(m,coef); k+=n.k; p+=n.p; nm++; } else if(!m.opt) manques.push(MEALKEYS[m.key]||m.key); });
+  (j.ecarts||[]).forEach(e=>{k+=+e.k||0;p+=+e.p||0;}); k+=boissonsKcal(j);
+  const bo=j.boissons||[]; const nb=t=>bo.filter(x=>x.t===t).length;
+  const hyd=(bo.filter(x=>(BOISSONS[x.t]||[])[7]).length+(j.eau&&!bo.length?j.eau:0))*0.2, cible=hydraCible(who);
+  const pmin=+P.pmin||100, pmax=+P.pmax||120, bon=kcalBonus(who,di), kmin=(+P.kmin||0)+bon, kmax=(+P.kmax||0)+bon;
+  const f=x=>String(Math.round(x*10)/10).replace(".",",");
+  let r=`Protéines : ${r0(p)} g sur ${pmin}–${pmax} g ${p>=pmin?"✅":"⚠️"} · Calories : ${r0(k)} kcal${kmax?` (repère ${kmin}–${kmax})`:""} · Eau : ${f(hyd)} L sur ${f(cible)} L ${hyd>=cible?"💧":""}.`;
+  r+=` Repas cochés : ${nm}/${meals.length}${manques.length?" (non cochés : "+manques.join(", ")+")":""}.`;
+  if((j.ecarts||[]).length) r+=` Écarts notés : ${j.ecarts.length}.`;
+  if(j.actMin) r+=` Activité : ${j.actMin} min${j.actType?" "+j.actType:""} 👏`;
+  const A=[];
+  if(!nm&&!(j.ecarts||[]).length) return {resume:"Aucun repas coché aujourd'hui : cochez ce que vous avez mangé (ou racontez votre journée), puis refaites le bilan.", ajustement:"Le bilan sera juste dès que vos repas seront cochés 🌷"};
+  if(p<pmin) A.push(`Il manquait ${r0(pmin-p)} g de protéines : ajoutez 2 œufs au petit-déjeuner (ou 150 g de fromage blanc / yaourt grec, ou 60 g de jambon).`);
+  if(kmax&&k>kmax+150) A.push("Calories un peu hautes : demain, gardez les légumes à volonté et allégez la matière grasse (1 c. à soupe d'huile par repas).");
+  if(hyd<cible) A.push(`Hydratation à renforcer : visez ${f(cible)} L, un grand verre d'eau au réveil puis un à chaque repas (ou une tisane).`);
+  if(nb("redbull")) A.push("Red Bull aujourd'hui : demain, remplacez-le par une eau pétillante citronnée ou un thé vert glacé maison.");
+  if(nb("vin")>2) A.push("Vin : gardez-le à 1–2 verres, 2 soirs par semaine.");
+  if(manques.length&&p<pmin) A.push("Évitez de sauter un repas : même petit, il protège vos muscles.");
+  if(+bien.sommeil&&+bien.sommeil<=2) A.push("Sommeil difficile : coucher un peu plus tôt, écrans coupés 1 h avant, tisane (camomille ou verveine).");
+  if(+bien.energie&&+bien.energie<=2&&!j.actMin) A.push("Énergie basse : 15 min de marche ou de rameur tranquille peuvent relancer la journée.");
+  if(+bien.digestion&&+bien.digestion<=2) A.push("Digestion à soulager : mastiquez lentement, légumes cuits plutôt que crus demain.");
+  if(!A.length) A.push("Belle journée, on garde exactement le même cap demain 🌷");
+  return {resume:r, ajustement:A.slice(0,3).join(" ")};
+}
 async function bilanNow(){
   const di=currentDayIdx(), date=dateForDay(di), who=S.who;
-  if(!SAMPLE){ toast("Le bilan fonctionne dans l'application publiée"); return; }
-  S.bilanBusy=true; render();
-  const j=J(date,who), bien=j.bien||{};
-  const prompt=`Fais le bilan du soir de cette journée.
-
-${aiContext(di,who,date)}
-RESSENTI (1 à 5) : énergie ${bien.energie||"?"}, sommeil ${bien.sommeil||"?"}, digestion ${bien.digestion||"?"}, humeur ${bien.humeur||"?"}. Activité : ${j.actMin||0} min ${j.actType||""}. Notes : ${j.notes||"aucune"}. Intention du jour : ${j.intention||"—"}. Victoires : ${(j.victoires||[]).filter(Boolean).join(" ; ")||"—"}.
-
-Réponds uniquement en JSON {"resume":"2 phrases chaleureuses : protéines vs objectif, calories vs repère, eau, activité, ressenti","ajustement":"1 à 3 propositions concrètes pour demain, avec une alternative quand tu proposes un aliment ; jamais de gingembre ; ne jamais conseiller de sauter un repas"}. Vouvoie.`;
-  try{ const r=await SAMPLE.json(prompt,{modelTier:"default",cache:false}); const doc={date,who,resume:String(r.resume||"").slice(0,500),ajustement:String(r.ajustement||"").slice(0,700),cree:nowHM()}; S.bilans[date+"-"+who]=doc; persist("bilans/"+date+"-"+who,doc); }
+  try{ const r=bilanLocal(di,who,date); const doc={date,who,resume:r.resume.slice(0,600),ajustement:r.ajustement.slice(0,700),cree:nowHM()}; S.bilans[date+"-"+who]=doc; persist("bilans/"+date+"-"+who,doc); toast("Bilan prêt 🌙"); }
   catch(e){ toast("Bilan impossible pour le moment, réessayez"); }
-  S.bilanBusy=false; render();
+  render();
 }
 function scoreCount(who,di){ const D=dayAt(di,who); const s0=di-(D.num-1); let n=0; for(let q=0;q<(PROTOS[D.proto].len||0);q++){ if(J(dateForDay(s0+q),who).reussi) n++; } return n; }
 const AUTOEVAL=[["energie","⚡ Énergie cette semaine",["1","2","3","4","5"]],["digestion","🌿 Digestion, confort intestinal, ballonnements",["Oui","Un peu","Pas encore"]],["sommeil","😴 Sommeil plus réparateur",["Oui","Un peu","Pas encore"]],["legerete","🪶 Moins gonflée, moins lourde, plus mobile",["Oui","Parfois","Non"]],["habitudes","🔁 Une habitude qui ne me faisait pas du bien laissée de côté",["Oui","En partie","Pas encore"]],["conscience","👂 Plus attentive à ma faim et ma satiété",["Oui","Parfois","Pas vraiment"]],["confiance","💪 Plus en contrôle de mon parcours",["Oui","En progression","Non"]]];
